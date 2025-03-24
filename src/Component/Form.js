@@ -905,7 +905,7 @@ const FormComponent = () => {
                   align="middle"
                   style={{ cursor: "pointer", marginTop: -2, marginRight: 1 }}
                 >
-                  <Text onClick={getTrial} style={{marginTop: -20,cursor: "pointer" }}>{t("getTrial")}</Text>
+                  <Text onClick={getTrial} style={{marginTop: -20,cursor: "pointer" }}>{t("getTrial ")}</Text>
                 </Row>
                 <Form.Item>
                   {/* <Space> */}
