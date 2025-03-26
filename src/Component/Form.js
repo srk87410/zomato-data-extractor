@@ -32,6 +32,9 @@ import {
   KeyOutlined,
   PlayCircleOutlined,
   CheckCircleOutlined,
+  UserOutlined,
+  CloseCircleOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -66,7 +69,7 @@ const FormComponent = () => {
   const [city, setCity] = useState("");
   const [key, setKey] = useState("");
   const [keyIsValid, setKeyIsValid] = useState(false);
-  const [selectedTabId, setSelectedTabId] = useState("home");
+  const [selectedTabId, setSelectedTabId] = useState(0);
   const [delay, setDelay] = useState(1);
   const [selectLang, setSelectLang] = useState("en");
   const [dataFormate, setDataFormate] = useState("csv");
@@ -203,7 +206,7 @@ const FormComponent = () => {
         setIsLicenseValid(true);
         setLicenseMessage("");
       } else {
-        setIsLicenseValid(true);
+        setIsLicenseValid(false);
         setLicenseDetails(null);
         setLicenseMessage(response.message);
       }
@@ -423,9 +426,8 @@ const FormComponent = () => {
         <div
           style={{
             backgroundColor: theme.primaryColor,
-            padding: "20px",
+            padding: "15px",
             textAlign: "center",
-            color: "#fff",
           }}
         >
           <Space>
@@ -442,13 +444,22 @@ const FormComponent = () => {
             <Space style={{ marginTop: 10 }}>
               <Text style={{ color: "#fff" }}>{t("expireDate")}</Text>
               <Tag color="blue">{expireDate()}</Tag>
-              <Tag
+              <Button
                 color="green"
                 onClick={() => setRenewOpen(true)}
-                style={{ cursor: "pointer" }}
+                // style={{ cursor: "pointer" }}
+                style={{
+                  cursor: "pointer",
+                  backgroundColor: "white",
+                  color: "black",
+                  height: "25px",
+                  width: "65px",
+                  backgroundColor: theme.primaryColor,
+                  color:"white"
+                }}
               >
                 {t("renewLabel")}
-              </Tag>
+              </Button>
             </Space>
           )}
         </div>
@@ -467,22 +478,45 @@ const FormComponent = () => {
             />
           </div>
         ) : (
-          <div style={{ padding: "15px" }}>
+          <div>
             {isLicenseValid ? (
               <>
-                <div style={{ display: "flex", justifyContent: "center" }}>
+              <div
+                  style={{
+                    backgroundColor: theme.primaryColor,
+                    color: "white",
+                    padding: "8px 6px",
+                  }}
+                >
+                  <Row gutter={16} justify="center">
+                    {TAB_ITEMS.map((tab, i) => (
+                      <Col key={tab}>
+                        <Button
+                          type={selectedTabId === i ? "default" : "text"}
+                          onClick={() => setSelectedTabId(i)}
+                          style={{
+                            color: selectedTabId === i ? "#000" : "inherit",
+                          }}
+                        >
+                          {t(tab)}
+                        </Button>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+                {/* <div style={{ display: "flex", justifyContent: "center",width: "100%", }}>
                   <Tabs
                     activeKey={selectedTabId}
                     onChange={setSelectedTabId}
-                    style={{ marginTop: "-16px" }}
+                    style={{ marginTop: "-16px", width: "100%",backgroundColor: theme.primaryColor,paddingInline:10 }}
                   >
                     {TAB_ITEMS?.map((tab) => (
                       <TabPane tab={t(tab)} key={tab}></TabPane>
                     ))}
                   </Tabs>
-                </div>
-                <div>
-                  {selectedTabId === "home" && (
+                </div> */}
+                <div style={{ padding: "15px" }}>
+                  {selectedTabId === 0 && (
                     <div>
                       <Form form={form} onFinish={onScrape}>
                         <Title level={5} style={{ marginTop: "-5px" }}>
@@ -598,7 +632,7 @@ const FormComponent = () => {
                       )}
                     </div>
                   )}
-                  {selectedTabId === "data" && (
+                  {selectedTabId === 1 && (
                     <div>
                       {Object.keys(scrapData).length === 0 ? (
                         <Alert message={t("noDataFound")} type="warning" />
@@ -644,7 +678,7 @@ const FormComponent = () => {
                                 >
                                   {t("download")}
                                 </Button>
-                                <Button danger onClick={onDeleteScrapData}>
+                                <Button  onClick={onDeleteScrapData} style={{backgroundColor:"red" , color:"white"}}>
                                   {t("delete")}
                                 </Button>
                               </Space>
@@ -659,7 +693,7 @@ const FormComponent = () => {
                       )}
                     </div>
                   )}
-                  {selectedTabId === "setting" && (
+                  {selectedTabId === 2 && (
                     <Form onFinish={onSaveSetting}>
                       <Form.Item
                         label={t("removeDuplicate")}
@@ -728,7 +762,7 @@ const FormComponent = () => {
                       </Flex>
                     </Form>
                   )}
-                  {selectedTabId === "help" && (
+                  {selectedTabId === 3 && (
                     <div style={{ marginTop: "-20px" }}>
                       <Title level={5}>{t("helpMsg")}</Title>
                       <Paragraph>{t("contactWithEmail")}</Paragraph>
@@ -798,136 +832,336 @@ const FormComponent = () => {
                 >{`V ${localmanifestVersion?.localVersion || ""}`}</Text>
               </>
             ) : (
-              <Form form={form} onFinish={onActivateSubmit}>
-                {licenseMessage && (
-                  <Alert message={t(licenseMessage)} type="warning" />
-                )}
-                <Form.Item
-                  name="name"
-                  // label={t("name")}
-                  rules={[{ required: true, message: t("nameRequired") }]}
-                >
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    prefix={<HomeOutlined />}
-                    placeholder={t("enterName")}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="email"
-                  // label={t("emailAddress")}
-                  rules={[
-                    { required: true, message: t("emailRequired") },
-                    { type: "email", message: t("emailInvalid") },
-                  ]}
-                >
-                  <Input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    prefix={<MailOutlined />}
-                    placeholder={t("enterEmail")}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="phone"
-                  // label={t("phone")}
-                  rules={[{ required: true, message: t("phoneRequired") }]}
-                >
-                  <PhoneInput
-                    country="in"
-                    value={phone}
-                    onChange={setPhone}
-                    inputStyle={{ width: "100%" }}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="city"
-                  // label={t("city")}
-                  rules={[{ required: true, message: t("cityRequired") }]}
-                >
-                  <Input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    prefix={<HomeOutlined />}
-                    placeholder={t("enterCity")}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="country"
-                  // label={t("country")}
-                  validateStatus={country || !showValidation ? "" : "error"}
-                  rules={[{ required: true, message: t("countryRequired") }]}
-                >
-                  <Select
-                  showSearch
-                    onChange={setCountry}
-                    defaultValue={"india"}
-                    value={country ?? "IN"}
-                    placeholder={t("selectCountry")}
+              
+              // <Form form={form} onFinish={onActivateSubmit} style={{padding:"20px"}}>
+              //   {licenseMessage && (
+              //     <Alert message={t(licenseMessage)} type="warning" />
+              //   )}
+              //   <Form.Item
+              //     name="name"
+              //     // label={t("name")}
+              //     rules={[{ required: true, message: t("nameRequired") }]}
+              //   >
+              //     <Input
+              //       value={name}
+              //       onChange={(e) => setName(e.target.value)}
+              //       prefix={<HomeOutlined />}
+              //       placeholder={t("enterName")}
+              //     />
+              //   </Form.Item>
+              //   <Form.Item
+              //     name="email"
+              //     // label={t("emailAddress")}
+              //     rules={[
+              //       { required: true, message: t("emailRequired") },
+              //       { type: "email", message: t("emailInvalid") },
+              //     ]}
+              //   >
+              //     <Input
+              //       value={email}
+              //       onChange={(e) => setEmail(e.target.value)}
+              //       prefix={<MailOutlined />}
+              //       placeholder={t("enterEmail")}
+              //     />
+              //   </Form.Item>
+              //   <Form.Item
+              //     name="phone"
+              //     // label={t("phone")}
+              //     rules={[{ required: true, message: t("phoneRequired") }]}
+              //   >
+              //     <PhoneInput
+              //       country="in"
+              //       value={phone}
+              //       onChange={setPhone}
+              //       inputStyle={{ width: "100%" }}
+              //     />
+              //   </Form.Item>
+              //   <Form.Item
+              //     name="city"
+              //     // label={t("city")}
+              //     rules={[{ required: true, message: t("cityRequired") }]}
+              //   >
+              //     <Input
+              //       value={city}
+              //       onChange={(e) => setCity(e.target.value)}
+              //       prefix={<HomeOutlined />}
+              //       placeholder={t("enterCity")}
+              //     />
+              //   </Form.Item>
+              //   <Form.Item
+              //     name="country"
+              //     // label={t("country")}
+              //     validateStatus={country || !showValidation ? "" : "error"}
+              //     rules={[{ required: true, message: t("countryRequired") }]}
+              //   >
+              //     <Select
+              //     showSearch
+              //       onChange={setCountry}
+              //       defaultValue={"india"}
+              //       value={country ?? "IN"}
+              //       placeholder={t("selectCountry")}
+              //     >
+              //       {countryList?.map((c) => (
+              //         <Option key={c.countryCode} value={c.countryNameEn}>
+              //           {c.countryNameEn}
+              //         </Option>
+              //       ))}
+              //     </Select>
+              //   </Form.Item>
+              //   <Form.Item
+              //     name="key"
+              //     // label={t("licenseKey")}
+              //     validateStatus={
+              //       key && keyIsValid
+              //         ? "success"
+              //         : key && !keyIsValid
+              //         ? "error"
+              //         : ""
+              //     }
+              //     help={key && !keyIsValid ? licenceKeyErrorMessage : ""}
+              //     rules={[{ required: true, message: t("licenseKeyRequired") }]}
+              //   >
+              //     <Input
+              //       value={key}
+              //       onChange={(e) => setKey(e.target.value)}
+              //       prefix={<KeyOutlined />}
+              //       suffix={
+              //         keyIsValid ? (
+              //           <CheckCircleOutlined style={{ color: "green" }} />
+              //         ) : (
+              //           <CheckCircleOutlined style={{ color: "gray" }} />
+              //         )
+              //       }
+              //       placeholder={t("enterLicenseKey")}
+              //     />
+              //   </Form.Item>
+              //   <Row
+              //     justify="end"
+              //     align="middle"
+              //     style={{ cursor: "pointer", marginTop: -2, marginRight: 1 }}
+              //   >
+              //     <Text onClick={getTrial} style={{marginTop: -20,cursor: "pointer" }}>{t("getTrial ")}</Text>
+              //   </Row>
+              //   <Form.Item>
+              //     {/* <Space> */}
+              //     <Flex justify="center" gap={20} style={{ marginTop: "15px" }}>
+              //       <Button type="primary" htmlType="submit">
+              //         {t("activate")}
+              //       </Button>
+              //       {product && rData?.active_shop && (
+              //         <Button>
+              //           <a
+              //             href={product?.siteUrl || rData?.buy_url}
+              //             target="_blank"
+              //             rel="noopener noreferrer"
+              //           >
+              //             {t("buyNow")}
+              //           </a>
+              //         </Button>
+              //       )}
+              //       {/* </Space> */}
+              //     </Flex>
+              //   </Form.Item>
+              // </Form>
+              <div style={{ padding: 16 }}>
+                <Form onFinish={onActivateSubmit} style={{ marginTop: "30px" }}>
+                  {licenseMessage && (
+                    <Alert
+                      // message={t(licenseMessage)}
+                      type="error" // Changed to "error" for red color
+                      style={{ marginBottom: 16 }}
+                    />
+                  )}
+                  <Form.Item
+                    validateStatus={name || !showValidation ? "" : "error"}
+                    help={name || !showValidation ? "" : t("Name is required")}
                   >
-                    {countryList?.map((c) => (
-                      <Option key={c.countryCode} value={c.countryNameEn}>
-                        {c.countryNameEn}
+                    <Input
+                      prefix={<UserOutlined />}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t("Enter your name")}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    validateStatus={
+                      (email && isEmailIsValid(email)) || !showValidation
+                        ? ""
+                        : "error"
+                    }
+                    help={
+                      email
+                        ? isEmailIsValid(email) || !showValidation
+                          ? ""
+                          : t("Invalid email")
+                        : showValidation
+                        ? t("Email is required")
+                        : ""
+                    }
+                  >
+                    <Input
+                      prefix={<MailOutlined />}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t("Enter your email")}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    validateStatus={!phone || phone === "91" ? "error" : ""}
+                    help={
+                      !phone || phone === "91" ? t("Phone is required") : ""
+                    }
+                    style={{
+                      width: "100%",
+                    }}
+                  >
+                    <PhoneInput
+                      inputStyle={{
+                        width: "100%",
+                      }}
+                      country="in"
+                      value={phone}
+                      onChange={(value) => {
+                        setPhone(value);
+                        // setShowValidation(true);
+                      }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    validateStatus={city || !showValidation ? "" : "error"}
+                    help={city || !showValidation ? "" : t("City is required")}
+                  >
+                    <Input
+                      prefix={<HomeOutlined />}
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder={t("Enter your city")}
+                    />
+                  </Form.Item>
+                  <Form>
+                    <Form.Item name="country" rules={[{ required: true, message: t("selectCountry") }]}>
+                  {/* <IoLocationOutline style={{ fontSize: "1.2rem" }} /> */}
+                  <Select value={country}  onChange={(value) => setCountry(value)} prefix={<EnvironmentOutlined  style={{ fontSize: "1.2rem" }}/> } placeholder={t("selectCountry")} showSearch>
+                    {countryList.map((x) => (
+                      <Option key={x.countryCode}
+                      value={x.countryNameEn}
+                      label={x.countryNameEn}>
+                        {x.countryNameEn}
                       </Option>
                     ))}
                   </Select>
                 </Form.Item>
-                <Form.Item
-                  name="key"
-                  // label={t("licenseKey")}
+                  </Form>
+
+                  {/* <Form.Item
                   validateStatus={
-                    key && keyIsValid
-                      ? "success"
-                      : key && !keyIsValid
-                      ? "error"
-                      : ""
+                    key ? (keyIsValid ? "success" : "error") : "error"
                   }
-                  help={key && !keyIsValid ? licenceKeyErrorMessage : ""}
-                  rules={[{ required: true, message: t("licenseKeyRequired") }]}
+                  help={
+                    key
+                      ? keyIsValid
+                        ? ""
+                        : t("Invalid license key")
+                      : t("License key is required")
+                  }
                 >
                   <Input
+                    prefix={<KeyOutlined />}
                     value={key}
                     onChange={(e) => setKey(e.target.value)}
-                    prefix={<KeyOutlined />}
+                    placeholder={t("Enter license key")}
                     suffix={
+                      // keyIsValid ? (
+                      //   <span style={{ color: "green" }}>✓</span>
+                      // ) : null
                       keyIsValid ? (
-                        <CheckCircleOutlined style={{ color: "green" }} />
+                        <CheckCircleOutlined style={{ color: 'green' }} />
                       ) : (
-                        <CheckCircleOutlined style={{ color: "gray" }} />
+                        <CheckCircleOutlined style={{ color: 'gray' }} />
                       )
                     }
-                    placeholder={t("enterLicenseKey")}
                   />
-                </Form.Item>
-                <Row
-                  justify="end"
-                  align="middle"
-                  style={{ cursor: "pointer", marginTop: -2, marginRight: 1 }}
-                >
-                  <Text onClick={getTrial} style={{marginTop: -20,cursor: "pointer" }}>{t("getTrial ")}</Text>
-                </Row>
-                <Form.Item>
-                  {/* <Space> */}
-                  <Flex justify="center" gap={20} style={{ marginTop: "15px" }}>
-                    <Button type="primary" htmlType="submit">
-                      {t("activate")}
-                    </Button>
-                    {product && rData?.active_shop && (
-                      <Button>
-                        <a
-                          href={product?.siteUrl || rData?.buy_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {t("buyNow")}
-                        </a>
+                </Form.Item> */}
+                  <Form.Item
+                    validateStatus={
+                      showValidation
+                        ? key
+                          ? keyIsValid
+                            ? "success"
+                            : "error"
+                          : "error"
+                        : ""
+                    }
+                    help={
+                      showValidation
+                        ? key
+                          ? keyIsValid
+                            ? ""
+                            : t("Invalid license key")
+                          : t("License key is required")
+                        : ""
+                    }
+                  >
+                    <Input
+                      prefix={<KeyOutlined />}
+                      value={key}
+                      onChange={(e) => {
+                        setKey(e.target.value);
+                        setShowValidation(true); // ફક્ત ફેરફાર બાદ વેલિડેશન ચાલુ થાય
+                      }}
+                      placeholder={t("Enter license key")}
+                      suffix={
+                        key && keyIsValid ? (
+                          <CheckCircleOutlined style={{ color: "green" }} />
+                        ) : key ? (
+                          <CloseCircleOutlined style={{ color: "red" }} />
+                        ) : null
+                      }
+                    />
+                  </Form.Item>
+
+                  <Space
+                    style={{
+                      justifyContent: "flex-end",
+                      width: "100%",
+                      marginTop: "-5p",
+                    }}
+                  >
+                    <span
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        console.log("Get trial clicked");
+                        // Add getTrial logic here
+                      }}
+                    >
+                      {t("Get Trial")}
+                    </span>
+                  </Space>
+
+                  <Form.Item
+                    style={{ justifyContent: "center", display: "flex" }}
+                  >
+                    <Space>
+                      <Button type="primary" htmlType="submit">
+                        {t("activate")}
                       </Button>
-                    )}
-                    {/* </Space> */}
-                  </Flex>
-                </Form.Item>
-              </Form>
+                      {product && rData?.active_shop && (
+                        <Button>
+                          <a
+                            href={product?.siteUrl || rData?.buy_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {t("buyNow")}
+                          </a>
+                        </Button>
+                      )}
+                    </Space>
+                  </Form.Item>
+                </Form>
+              </div>
             )}
           </div>
         )}
