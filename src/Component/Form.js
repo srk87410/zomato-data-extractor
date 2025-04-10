@@ -43,14 +43,19 @@ import i18next from "i18next";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text, Paragraph, Link: AntLink } = Typography;
 
 const FormComponent = () => {
   const { t, i18n } = useTranslation();
   const [form] = Form.useForm();
 
   const [rData, setRData] = useState({});
-  const [theme, setTheme] = useState({ primaryColor: "#0855a4" });
+  const [theme, setTheme] = useState({
+    token: {
+      colorPrimary: "#0855a4",
+      fontFamily: "'Poppins', sans-serif",
+    },
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [product, setProduct] = useState(null);
   const [setting, setSetting] = useState(null);
@@ -66,7 +71,7 @@ const FormComponent = () => {
   const [city, setCity] = useState("");
   const [key, setKey] = useState("");
   const [keyIsValid, setKeyIsValid] = useState(false);
-  const [selectedTabId, setSelectedTabId] = useState("home");
+  const [selectedTabId, setSelectedTabId] = useState(0);
   const [delay, setDelay] = useState(1);
   const [selectLang, setSelectLang] = useState("en");
   const [dataFormate, setDataFormate] = useState("csv");
@@ -81,10 +86,18 @@ const FormComponent = () => {
   const [renewKey, setRenewKey] = useState("");
   const [renewOpen, setRenewOpen] = useState(false);
   const [localmanifestVersion, setLocalmanifestVersion] = useState("");
-  const [isUpdate, setIsUpdate] = useState(true);
+  const [isUpdate, setIsUpdate] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
 
   const TAB_ITEMS = ["home", "data", "setting", "help"];
+
+  const renewOpenForm = () => {
+    setRenewKey("");
+    setRenewOpen(true);
+  };
+  const renewCloseForm = () => {
+    setRenewOpen(false);
+  };
 
   const isEmailIsValid = (emailAddress) => {
     let regex = new RegExp("[a-z0-9]+@[a-z]+.[a-z]{2,3}");
@@ -115,10 +128,13 @@ const FormComponent = () => {
   useEffect(() => {
     let color = "#0855a4";
     if (product) color = product.color;
-    if (rData.theme_setting && rData.theme_setting["primary-color"]) {
-      color = rData.theme_setting["primary-color"];
-    }
-    setTheme({ primaryColor: color });
+    if (rData.theme_setting?.["primary-color"]) color = rData.theme_setting["primary-color"];
+    setTheme({
+      token: {
+        colorPrimary: color,
+        fontFamily: "'Poppins', sans-serif",
+      },
+    });
   }, [product, rData]);
 
   useEffect(() => {
@@ -222,11 +238,21 @@ const FormComponent = () => {
     sendChromeMessage({ type: "get_version" }, (response) =>
       setLocalmanifestVersion(response.version)
     );
+
+  const updateCancel = () => {
+    let forceUpdate = product?.forceUpdate ?? ""
+    if (forceUpdate) {
+      setIsUpdate(true)
+    } else {
+      console.error("forceUpdate", forceUpdate)
+      setIsUpdate(false);
+    }
+
+  };
   const dateFormat = (dateString) => {
     const expDate = new Date(dateString);
-    return `${expDate.getUTCDate()}-${
-      expDate.getUTCMonth() + 1
-    }-${expDate.getUTCFullYear()}`;
+    return `${expDate.getUTCDate()}-${expDate.getUTCMonth() + 1
+      }-${expDate.getUTCFullYear()}`;
   };
   const expireDate = () =>
     licenseDetails ? dateFormat(licenseDetails.expireAt) : "";
@@ -244,8 +270,8 @@ const FormComponent = () => {
           quality === "low"
             ? "sddefault"
             : quality === "medium"
-            ? "mqdefault"
-            : "hqdefault";
+              ? "mqdefault"
+              : "hqdefault";
         return `http://img.youtube.com/vi/${video_id}/${quality_key}.jpg`;
       }
     }
@@ -321,6 +347,7 @@ const FormComponent = () => {
       })
       .catch(() => message.error(t("urlRequired")));
   };
+  
 
   const onDownloadScrapData = () => {
     sendChromeMessage(
@@ -422,31 +449,21 @@ const FormComponent = () => {
 
         <div
           style={{
-            backgroundColor: theme.primaryColor,
-            padding: "20px",
-            textAlign: "center",
-            color: "#fff",
+            width: "100%",
+            height: 100,
+            backgroundColor: theme.token.colorPrimary,
+            opacity: 0.7,
           }}
         >
-          <Space>
-            <img
-              src={logo}
-              alt={product?.name || ""}
-              style={{ width: 45, height: 45 }}
-            />
-            <Title level={4} style={{ color: "#fff", margin: 0 }}>
-              {rData?.name || t("ZomatoAppname")}
-            </Title>
+          <Space direction="horizontal" align="center" style={{ padding: "8px", width: "100%", justifyContent: "center" }}>
+            <img width={45} height={45} src={logo} alt={product?.name ?? ""} />
+            <Text style={{ color: "white" }}>{rData?.name ?? t("yp")}</Text>
           </Space>
           {isLicenseValid && (
-            <Space style={{ marginTop: 10 }}>
-              <Text style={{ color: "#fff" }}>{t("expireDate")}</Text>
-              <Tag color="blue">{expireDate()}</Tag>
-              <Tag
-                color="green"
-                onClick={() => setRenewOpen(true)}
-                style={{ cursor: "pointer" }}
-              >
+            <Space direction="horizontal" align="center" style={{ marginTop: "0px", justifyContent: "center", width: "100%" }}>
+              <Text style={{ color: "white" }}>{t("expireDate")}</Text>
+              <Tag bordered color="#17F8F0">{expireDate()}</Tag>
+              <Tag bordered style={{ backgroundColor: "white" }} onClick={renewOpenForm}>
                 {t("renewLabel")}
               </Tag>
             </Space>
@@ -467,25 +484,44 @@ const FormComponent = () => {
             />
           </div>
         ) : (
-          <div style={{ padding: "15px" }}>
+          <div>
             {isLicenseValid ? (
               <>
-                <div style={{ display: "flex", justifyContent: "center" }}>
-                  <Tabs
-                    activeKey={selectedTabId}
-                    onChange={setSelectedTabId}
-                    style={{ marginTop: "-16px" }}
+                {product?.version > localmanifestVersion?.liveVersion && (
+                  <Modal
+                    open={isUpdate}
+                    onCancel={updateCancel}
+                    footer={null}
+                    closable={!product?.forceUpdate}
                   >
-                    {TAB_ITEMS?.map((tab) => (
-                      <TabPane tab={t(tab)} key={tab}></TabPane>
+                    <AntLink href={product.updateUrl ?? ""} target="_blank">
+                      <img src={product.updateBannerUrl ?? ""} alt={product.updateBannerUrl ?? ""} style={{ height: 160 }} />
+                    </AntLink>
+                  </Modal>
+                )}
+                <div style={{ backgroundColor: theme.token.colorPrimary }}>
+                  <Row justify="center" align="middle" style={{ padding: "8px 10px" }}>
+                    {TAB_ITEMS.map((x, i) => (
+                      <Col span={6} key={`tab-${i}`}>
+                        <Button
+                          type={selectedTabId === i ? "default" : "text"}
+                          style={{
+                            color: selectedTabId === i ? theme.token.colorText : "white",
+                          }}
+                          onClick={() => setSelectedTabId(i)}
+                        >
+                          {t(x)}
+                        </Button>
+
+                      </Col>
                     ))}
-                  </Tabs>
+                  </Row>
                 </div>
                 <div>
-                  {selectedTabId === "home" && (
+                  {selectedTabId === 0 && (
                     <div>
-                      <Form form={form} onFinish={onScrape}>
-                        <Title level={5} style={{ marginTop: "-5px" }}>
+                      <Form form={form} onFinish={onScrape} style={{ padding: "20px", marginTop: "-27px" }}>
+                        <Title level={5} style={{ marginTop: "21px" }}>
                           {t("welcome")} {licenseDetails?.name || ""}
                         </Title>
                         <Form.Item
@@ -502,6 +538,7 @@ const FormComponent = () => {
                             value={zomatoLink}
                             onChange={(e) => setZomatoLink(e.target.value)}
                             placeholder={t("enterzomatoLink")}
+                            style={{ width: "100%", marginTop: 8, height: "40px" }}
                           />
                         </Form.Item>
                         <Flex justify="center" style={{ marginTop: -10 }}>
@@ -598,8 +635,8 @@ const FormComponent = () => {
                       )}
                     </div>
                   )}
-                  {selectedTabId === "data" && (
-                    <div>
+                  {selectedTabId === 1 && (
+                    <div style={{ padding: 24, marginTop: "15px"}}>
                       {Object.keys(scrapData).length === 0 ? (
                         <Alert message={t("noDataFound")} type="warning" />
                       ) : (
@@ -659,8 +696,9 @@ const FormComponent = () => {
                       )}
                     </div>
                   )}
-                  {selectedTabId === "setting" && (
-                    <Form onFinish={onSaveSetting}>
+                  {selectedTabId === 2 && (
+                    <div style={{ padding: 24 }}>
+                    <Form onFinish={onSaveSetting} >
                       <Form.Item
                         label={t("removeDuplicate")}
                         style={{ marginTop: "-12px" }}
@@ -727,9 +765,10 @@ const FormComponent = () => {
                         </Button>
                       </Flex>
                     </Form>
+                    </div>
                   )}
-                  {selectedTabId === "help" && (
-                    <div style={{ marginTop: "-20px" }}>
+                  {selectedTabId === 3 && (
+                    <div style={{ padding: "24px", marginTop: "-30px" }}>
                       <Title level={5}>{t("helpMsg")}</Title>
                       <Paragraph>{t("contactWithEmail")}</Paragraph>
                       <List
@@ -740,11 +779,10 @@ const FormComponent = () => {
                             content: rData?.active_shop
                               ? product?.contactNumber
                               : rData?.phone,
-                            href: `tel:${
-                              rData?.active_shop
-                                ? product?.contactNumber
-                                : rData?.phone
-                            }`,
+                            href: `tel:${rData?.active_shop
+                              ? product?.contactNumber
+                              : rData?.phone
+                              }`,
                           },
                           {
                             icon: <MailOutlined />,
@@ -752,9 +790,8 @@ const FormComponent = () => {
                             content: rData?.active_shop
                               ? product?.email
                               : rData?.email,
-                            href: `mailto:${
-                              rData?.active_shop ? product?.email : rData?.email
-                            }`,
+                            href: `mailto:${rData?.active_shop ? product?.email : rData?.email
+                              }`,
                           },
                           {
                             icon: <GlobalOutlined />,
@@ -860,7 +897,7 @@ const FormComponent = () => {
                   rules={[{ required: true, message: t("countryRequired") }]}
                 >
                   <Select
-                  showSearch
+                    showSearch
                     onChange={setCountry}
                     defaultValue={"india"}
                     value={country ?? "IN"}
@@ -880,8 +917,8 @@ const FormComponent = () => {
                     key && keyIsValid
                       ? "success"
                       : key && !keyIsValid
-                      ? "error"
-                      : ""
+                        ? "error"
+                        : ""
                   }
                   help={key && !keyIsValid ? licenceKeyErrorMessage : ""}
                   rules={[{ required: true, message: t("licenseKeyRequired") }]}
@@ -905,7 +942,7 @@ const FormComponent = () => {
                   align="middle"
                   style={{ cursor: "pointer", marginTop: -2, marginRight: 1 }}
                 >
-                  <Text onClick={getTrial} style={{marginTop: -20,cursor: "pointer" }}>{t("getTrial ")}</Text>
+                  <Text onClick={getTrial} style={{ marginTop: -20, cursor: "pointer" }}>{t("getTrial ")}</Text>
                 </Row>
                 <Form.Item>
                   {/* <Space> */}
